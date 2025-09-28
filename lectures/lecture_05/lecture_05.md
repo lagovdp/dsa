@@ -530,3 +530,90 @@ print('Исходный массив данных:', data)
 merge_sort(data, 0, len(data))
 print("Отсортированный массив:", data)
 ```
+
++++ {"editable": true, "slideshow": {"slide_type": "slide"}}
+
+### TimSort
+
+TimSort — это гибридный алгоритм сортировки, используемый по умолчанию в Python (в функциях sorted() и методе .sort() у списков). 
+
+Он был разработан Тимом Питерсом (Tim Peters) в 2002 году. 
+
+Полная реализация очень сложна (включает в себя вставки, слияния, управление "ранами" и т.д.):
+
+```{code-cell} ipython3
+---
+editable: true
+slideshow:
+  slide_type: subslide
+---
+def insertion_sort(arr, left, right):
+    """Сортировка вставками для небольших подмассивов."""
+    for i in range(left + 1, right + 1):
+        key = arr[i]
+        j = i - 1
+        while j >= left and arr[j] > key:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+
+def merge(arr, l, m, r):
+    """Слияние двух отсортированных подмассивов."""
+    left = arr[l:m + 1]
+    right = arr[m + 1:r + 1]
+    
+    i = j = 0
+    k = l
+
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            arr[k] = left[i]
+            i += 1
+        else:
+            arr[k] = right[j]
+            j += 1
+        k += 1
+
+    while i < len(left):
+        arr[k] = left[i]
+        i += 1
+        k += 1
+
+    while j < len(right):
+        arr[k] = right[j]
+        j += 1
+        k += 1
+
+def timsort(arr):
+    """Упрощённая реализация TimSort."""
+    n = len(arr)
+    if n <= 1:
+        return arr
+
+    # Минимальный размер "рана" (обычно 32 или 64 в реальной реализации)
+    min_run = 32
+
+    # Шаг 1: Сортируем подмассивы размером min_run с помощью сортировки вставками
+    for start in range(0, n, min_run):
+        end = min(start + min_run - 1, n - 1)
+        insertion_sort(arr, start, end)
+
+    # Шаг 2: Последовательно сливаем отсортированные подмассивы
+    size = min_run
+    while size < n:
+        for left in range(0, n, 2 * size):
+            mid = min(left + size - 1, n - 1)
+            right = min(left + 2 * size - 1, n - 1)
+            if mid < right:
+                merge(arr, left, mid, right)
+        size *= 2
+
+    return arr
+
+
+# Пример использования
+data = [44, 55, 12, 42, 94, 18, 16, 67]
+print('Исходный массив данных:', data)
+timsort(data)
+print("Отсортированный массив:", data)
+```
