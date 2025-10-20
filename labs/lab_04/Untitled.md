@@ -12,6 +12,7 @@ jupyter:
     name: python3
 ---
 
+# Лабораторная работа 4
 ```python
 from abc import ABC, abstractmethod
 from typing import Any, Optional
