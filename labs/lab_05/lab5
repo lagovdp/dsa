@@ -1,0 +1,423 @@
+ᅠOdywanchick, [10.11.2025 8:58]
+class ListNode:
+    """Узел связного списка для метода цепочек"""
+    def init(self, key, value):
+        self.key = key
+        self.value = value
+        self.next = None
+
+class HashTableChaining:
+    """Хеш-таблица на основе метода цепочек"""
+    
+    def init(self, capacity=8, load_factor=0.75):
+        self.capacity = capacity
+        self.load_factor = load_factor
+        self.size = 0
+        self.buckets = [None] * self.capacity
+    
+    def _hash(self, key):
+        """Хеш-функция для ключа"""
+        if isinstance(key, int):
+            return key % self.capacity
+        elif isinstance(key, str):
+            # Полиномиальная хеш-функция для строк
+            hash_val = 0
+            for char in key:
+                hash_val = (hash_val * 31 + ord(char)) % self.capacity
+            return hash_val
+        else:
+            return hash(key) % self.capacity
+    
+    def _resize(self):
+        """Увеличение размера таблицы при необходимости"""
+        if self.size / self.capacity <= self.load_factor:
+            return
+        
+        old_buckets = self.buckets
+        self.capacity *= 2
+        self.buckets = [None] * self.capacity
+        self.size = 0
+        
+        for bucket in old_buckets:
+            current = bucket
+            while current:
+                self.put(current.key, current.value)
+                current = current.next
+    
+    def put(self, key, value):
+        """Добавление элемента"""
+        self._resize()
+        index = self._hash(key)
+        
+        if self.buckets[index] is None:
+            self.buckets[index] = ListNode(key, value)
+            self.size += 1
+            return
+        
+        # Проверяем, существует ли уже ключ
+        current = self.buckets[index]
+        while current:
+            if current.key == key:
+                current.value = value  # Обновляем значение
+                return
+            if current.next is None:
+                break
+            current = current.next
+        
+        # Добавляем новый узел в конец цепочки
+        current.next = ListNode(key, value)
+        self.size += 1
+    
+    def get(self, key):
+        """Получение значения по ключу"""
+        index = self._hash(key)
+        current = self.buckets[index]
+        
+        while current:
+            if current.key == key:
+                return current.value
+            current = current.next
+        
+        raise KeyError(f"Key {key} not found")
+    
+    def remove(self, key):
+        """Удаление элемента по ключу"""
+        index = self._hash(key)
+        current = self.buckets[index]
+        prev = None
+        
+        while current:
+            if current.key == key:
+                if prev:
+                    prev.next = current.next
+                else:
+                    self.buckets[index] = current.next
+                self.size -= 1
+                return current.value
+            prev = current
+            current = current.next
+        
+        raise KeyError(f"Key {key} not found")
+    
+    def contains(self, key):
+        """Проверка наличия ключа"""
+        try:
+            self.get(key)
+            return True
+        except KeyError:
+            return False
+    
+    def str(self):
+        result = []
+        for i, bucket in enumerate(self.buckets):
+            chain = []
+            current = bucket
+            while current:
+                chain.append(f"{current.key}:{current.value}")
+                current = current.next
+            if chain:
+                result.append(f"Bucket {i}: {' -> '.join(chain)}")
+        return "\n".join(result)
+
+ᅠOdywanchick, [10.11.2025 8:58]
+class HashTableOpenAddressing:
+    """Хеш-таблица на основе открытой адресации с линейным пробированием"""
+    
+    def init(self, capacity=8, load_factor=0.75):
+        self.capacity = capacity
+        self.load_factor = load_factor
+        self.size = 0
+        self.keys = [None] * self.capacity
+        self.values = [None] * self.capacity
+        self.DELETED = object()  # Маркер для удаленных элементов
+    
+    def _hash(self, key):
+        """Хеш-функция"""
+        if isinstance(key, int):
+            return key % self.capacity
+        elif isinstance(key, str):
+            hash_val = 0
+            for char in key:
+                hash_val = (hash_val * 31 + ord(char)) % self.capacity
+            return hash_val
+        else:
+            return hash(key) % self.capacity
+    
+    def _resize(self):
+        """Увеличение размера таблицы"""
+        if self.size / self.capacity <= self.load_factor:
+            return
+        
+        old_keys = self.keys
+        old_values = self.values
+        self.capacity *= 2
+        self.keys = [None] * self.capacity
+        self.values = [None] * self.capacity
+        self.size = 0
+        
+        for key, value in zip(old_keys, old_values):
+            if key is not None and key != self.DELETED:
+                self.put(key, value)
+    
+    def _probe(self, key, for_insert=False):
+        """Линейное пробирование"""
+        index = self._hash(key)
+        start_index = index
+        
+        while True:
+            # Для вставки: ищем пустую ячейку или ячейку с DELETED
+            if for_insert:
+                if (self.keys[index] is None or 
+                    self.keys[index] == self.DELETED or 
+                    self.keys[index] == key):
+                    return index
+            # Для поиска/удаления: ищем ключ или пустую ячейку
+            else:
+                if self.keys[index] is None:
+                    return -1
+                if self.keys[index] == key:
+                    return index
+            index = (index + 1) % self.capacity
+            if index == start_index:  # Прошли весь массив
+                return -1
+    
+    def put(self, key, value):
+        """Добавление элемента"""
+        self._resize()
+        index = self._probe(key, for_insert=True)
+        
+        if index == -1:
+            self._resize()
+            index = self._probe(key, for_insert=True)
+        
+        if self.keys[index] is None or self.keys[index] == self.DELETED:
+            self.size += 1
+        
+        self.keys[index] = key
+        self.values[index] = value
+    
+    def get(self, key):
+        """Получение значения по ключу"""
+        index = self._probe(key)
+        if index == -1:
+            raise KeyError(f"Key {key} not found")
+        return self.values[index]
+    
+    def remove(self, key):
+        """Удаление элемента по ключу"""
+        index = self._probe(key)
+        if index == -1:
+            raise KeyError(f"Key {key} not found")
+        
+        value = self.values[index]
+        self.keys[index] = self.DELETED
+        self.values[index] = None
+        self.size -= 1
+        return value
+    
+    def contains(self, key):
+        """Проверка наличия ключа"""
+        try:
+            self.get(key)
+            return True
+        except KeyError:
+            return False
+    
+    def str(self):
+        result = []
+        for i in range(self.capacity):
+            if self.keys[i] is not None and self.keys[i] != self.DELETED:
+                result.append(f"Index {i}: {self.keys[i]} -> {self.values[i]}")
+        return "\n".join(result)
+
+class Block:
+    """Блок для блокчейна"""
+    def init(self, data, previous_hash=""):
+        self.data = data
+        self.previous_hash = previous_hash
+        self.hash = self.calculate_hash()
+    
+    def calculate_hash(self):
+        """Вычисление хеша блока"""
+        import hashlib
+        data_string = str(self.data) + self.previous_hash
+        return hashlib.sha256(data_string.encode()).hexdigest()
+
+ᅠOdywanchick, [10.11.2025 8:58]
+class Blockchain:
+    """Простая реализация блокчейна"""
+    
+    def init(self):
+        self.chain = [self._create_genesis_block()]
+    
+    def _create_genesis_block(self):
+        """Создание генезис-блока (первого блока)"""
+        return Block("Genesis Block", "0")
+    
+    def add_block(self, data):
+        """Добавление нового блока"""
+        previous_block = self.chain[-1]
+        new_block = Block(data, previous_block.hash)
+        self.chain.append(new_block)
+    
+    def is_valid(self):
+        """Проверка целостности блокчейна"""
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i - 1]
+            
+            # Проверка хеша текущего блока
+            if current_block.hash != current_block.calculate_hash():
+                return False
+            
+            # Проверка связи с предыдущим блоком
+            if current_block.previous_hash != previous_block.hash:
+                return False
+        
+        return True
+    
+    def str(self):
+        result = []
+        for i, block in enumerate(self.chain):
+            result.append(f"Block {i}:")
+            result.append(f"  Data: {block.data}")
+            result.append(f"  Previous Hash: {block.previous_hash}")
+            result.append(f"  Hash: {block.hash}")
+            result.append("")
+        return "\n".join(result)
+
+# ЗАДАЧИ 4-7
+
+def array_intersection(arr1, arr2):
+    """Проверка пересечения двух массивов (задача 4)"""
+    hash_set = set(arr1)
+    for item in arr2:
+        if item in hash_set:
+            return True
+    return False
+
+def all_unique_elements(arr):
+    """Проверка уникальности элементов в массиве (задача 5)"""
+    hash_set = set()
+    for item in arr:
+        if item in hash_set:
+            return False
+        hash_set.add(item)
+    return True
+
+def find_pairs_with_sum(arr, target_sum):
+    """Нахождение пар с заданной суммой (задача 6)"""
+    pairs = []
+    seen = set()
+    
+    for num in arr:
+        complement = target_sum - num
+        if complement in seen:
+            pairs.append((complement, num))
+        seen.add(num)
+    
+    return pairs
+
+def are_anagrams(str1, str2):
+    """Проверка анаграмм (задача 7)"""
+    if len(str1) != len(str2):
+        return False
+    
+    char_count = {}
+    
+    # Подсчет символов в первой строке
+    for char in str1:
+        char_count[char] = char_count.get(char, 0) + 1
+    
+    # Проверка второй строки
+    for char in str2:
+        if char not in char_count:
+            return False
+        char_count[char] -= 1
+        if char_count[char] == 0:
+            del char_count[char]
+    
+    return len(char_count) == 0
+
+# ДЕМОНСТРАЦИЯ РАБОТЫ
+
+def demonstrate_hash_tables():
+    print("=== ДЕМОНСТРАЦИЯ ХЕШ-ТАБЛИЦ ===\n")
+    
+    print("1. Хеш-таблица с методом цепочек:")
+    ht_chain = HashTableChaining()
+    ht_chain.put("apple", 1)
+    ht_chain.put("banana", 2)
+    ht_chain.put("cherry", 3)
+    ht_chain.put("apple", 10)  # Обновление значения
+    print(ht_chain)
+    print(f"Получение 'banana': {ht_chain.get('banana')}")
+    print(f"Содержит 'grape': {ht_chain.contains('grape')}")
+    print()
+    
+    print("2. Хеш-таблица с открытой адресацией:")
+    ht_open = HashTableOpenAddressing()
+    ht_open.put("one", 1)
+    ht_open.put("two", 2)
+    ht_open.put("three", 3)
+    print(ht_open)
+    print(f"Получение 'two': {ht_open.get('two')}")
+    ht_open.remove("two")
+    print("После удаления 'two':")
+    print(ht_open)
+    print()
+
+def demonstrate_blockchain():
+    print("=== ДЕМОНСТРАЦИЯ БЛОКЧЕЙНА ===\n")
+    
+    blockchain = Blockchain()
+    blockchain.add_block("Transaction 1: Alice -> Bob 10 BTC")
+    blockchain.add_block("Transaction 2: Bob -> Charlie 5 BTC")
+    blockchain.add_block("Transaction 3: Charlie -> Dave 3 BTC")
+    
+    print(blockchain)
+    print(f"Блокчейн валиден: {blockchain.is_valid()}")
+    print()
+
+ᅠOdywanchick, [10.11.2025 8:58]
+def demonstrate_tasks():
+    print("=== РЕШЕНИЕ ЗАДАЧ 4-7 ===\n")
+    
+    # Задача 4: Пересечение массивов
+    arr1 = [1, 2, 3, 4, 5]
+    arr2 = [6, 7, 8, 9, 10]
+    arr3 = [5, 6, 7, 8, 9]
+    print(f"Задача 4 - Пересечение массивов:")
+    print(f"arr1 {arr1} и arr2 {arr2}: {array_intersection(arr1, arr2)}")
+    print(f"arr1 {arr1} и arr3 {arr3}: {array_intersection(arr1, arr3)}")
+    print()
+    
+    # Задача 5: Уникальность элементов
+    unique_arr = [1, 2, 3, 4, 5]
+    duplicate_arr = [1, 2, 3, 2, 4]
+    print(f"Задача 5 - Уникальность элементов:")
+    print(f"Массив {unique_arr}: {all_unique_elements(unique_arr)}")
+    print(f"Массив {duplicate_arr}: {all_unique_elements(duplicate_arr)}")
+    print()
+    
+    # Задача 6: Пары с заданной суммой
+    numbers = [2, 7, 11, 15, 3, 6, 8]
+    target = 9
+    print(f"Задача 6 - Пары с суммой {target}:")
+    print(f"Массив: {numbers}")
+    print(f"Пары: {find_pairs_with_sum(numbers, target)}")
+    print()
+    
+    # Задача 7: Анаграммы
+    str1 = "listen"
+    str2 = "silent"
+    str3 = "hello"
+    str4 = "world"
+    print(f"Задача 7 - Анаграммы:")
+    print(f"'{str1}' и '{str2}': {are_anagrams(str1, str2)}")
+    print(f"'{str3}' и '{str4}': {are_anagrams(str3, str4)}")
+
+if name == "main":
+    demonstrate_hash_tables()
+    demonstrate_blockchain()
+    demonstrate_tasks()
