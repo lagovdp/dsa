@@ -1,15 +1,35 @@
-ᅠOdywanchick, [10.11.2025 8:58]
+---
+jupyter:
+  jupytext:
+    formats: ipynb,md
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.3'
+      jupytext_version: 1.17.3
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+```python
+# ============================================================================
+# ЗАДАНИЯ 1-3: КЛАССЫ СТРУКТУР ДАННЫХ
+# ============================================================================
+
 class ListNode:
     """Узел связного списка для метода цепочек"""
-    def init(self, key, value):
+    def __init__(self, key, value):
         self.key = key
         self.value = value
         self.next = None
 
+
 class HashTableChaining:
     """Хеш-таблица на основе метода цепочек"""
     
-    def init(self, capacity=8, load_factor=0.75):
+    def __init__(self, capacity=8, load_factor=0.75):
         self.capacity = capacity
         self.load_factor = load_factor
         self.size = 0
@@ -107,7 +127,7 @@ class HashTableChaining:
         except KeyError:
             return False
     
-    def str(self):
+    def __str__(self):
         result = []
         for i, bucket in enumerate(self.buckets):
             chain = []
@@ -119,11 +139,11 @@ class HashTableChaining:
                 result.append(f"Bucket {i}: {' -> '.join(chain)}")
         return "\n".join(result)
 
-ᅠOdywanchick, [10.11.2025 8:58]
+
 class HashTableOpenAddressing:
     """Хеш-таблица на основе открытой адресации с линейным пробированием"""
     
-    def init(self, capacity=8, load_factor=0.75):
+    def __init__(self, capacity=8, load_factor=0.75):
         self.capacity = capacity
         self.load_factor = load_factor
         self.size = 0
@@ -223,31 +243,33 @@ class HashTableOpenAddressing:
         except KeyError:
             return False
     
-    def str(self):
+    def __str__(self):
         result = []
         for i in range(self.capacity):
             if self.keys[i] is not None and self.keys[i] != self.DELETED:
                 result.append(f"Index {i}: {self.keys[i]} -> {self.values[i]}")
         return "\n".join(result)
 
+
+import hashlib
+
 class Block:
     """Блок для блокчейна"""
-    def init(self, data, previous_hash=""):
+    def __init__(self, data, previous_hash=""):
         self.data = data
         self.previous_hash = previous_hash
         self.hash = self.calculate_hash()
     
     def calculate_hash(self):
         """Вычисление хеша блока"""
-        import hashlib
         data_string = str(self.data) + self.previous_hash
         return hashlib.sha256(data_string.encode()).hexdigest()
 
-ᅠOdywanchick, [10.11.2025 8:58]
+
 class Blockchain:
     """Простая реализация блокчейна"""
     
-    def init(self):
+    def __init__(self):
         self.chain = [self._create_genesis_block()]
     
     def _create_genesis_block(self):
@@ -276,7 +298,7 @@ class Blockchain:
         
         return True
     
-    def str(self):
+    def __str__(self):
         result = []
         for i, block in enumerate(self.chain):
             result.append(f"Block {i}:")
@@ -286,43 +308,80 @@ class Blockchain:
             result.append("")
         return "\n".join(result)
 
-# ЗАДАЧИ 4-7
+
+# ============================================================================
+# ЗАДАНИЯ 4-7: ФУНКЦИИ ДЛЯ РЕШЕНИЯ ЗАДАЧ
+# ============================================================================
 
 def array_intersection(arr1, arr2):
-    """Проверка пересечения двух массивов (задача 4)"""
-    hash_set = set(arr1)
+    """
+    Задача 4: Проверка пересечения двух массивов
+    Возвращает True, если массивы имеют хотя бы один общий элемент
+    """
+    if not arr1 or not arr2:
+        return False
+    
+    # Используем множество для быстрой проверки
+    seen = set(arr1)
+    
     for item in arr2:
-        if item in hash_set:
+        if item in seen:
             return True
+    
     return False
 
+
 def all_unique_elements(arr):
-    """Проверка уникальности элементов в массиве (задача 5)"""
-    hash_set = set()
+    """
+    Задача 5: Проверка уникальности элементов в массиве
+    Возвращает True, если все элементы уникальны
+    """
+    if not arr:
+        return True
+    
+    seen = set()
+    
     for item in arr:
-        if item in hash_set:
+        if item in seen:
             return False
-        hash_set.add(item)
+        seen.add(item)
+    
     return True
 
+
 def find_pairs_with_sum(arr, target_sum):
-    """Нахождение пар с заданной суммой (задача 6)"""
+    """
+    Задача 6: Нахождение пар с заданной суммой
+    Возвращает список пар (a, b), где a + b = target_sum
+    """
+    if not arr:
+        return []
+    
     pairs = []
     seen = set()
     
     for num in arr:
         complement = target_sum - num
         if complement in seen:
-            pairs.append((complement, num))
+            # Добавляем пару в правильном порядке (меньшее число первым)
+            if complement < num:
+                pairs.append((complement, num))
+            else:
+                pairs.append((num, complement))
         seen.add(num)
     
     return pairs
 
+
 def are_anagrams(str1, str2):
-    """Проверка анаграмм (задача 7)"""
+    """
+    Задача 7: Проверка анаграмм
+    Возвращает True, если строки являются анаграммами
+    """
     if len(str1) != len(str2):
         return False
     
+    # Используем словарь для подсчета символов
     char_count = {}
     
     # Подсчет символов в первой строке
@@ -339,85 +398,206 @@ def are_anagrams(str1, str2):
     
     return len(char_count) == 0
 
-# ДЕМОНСТРАЦИЯ РАБОТЫ
 
-def demonstrate_hash_tables():
-    print("=== ДЕМОНСТРАЦИЯ ХЕШ-ТАБЛИЦ ===\n")
+# ============================================================================
+# ДЕМОНСТРАЦИЯ РАБОТЫ
+# ============================================================================
+
+def demonstrate_task_1_2():
+    """Демонстрация хеш-таблиц"""
+    print("=" * 60)
+    print("ЗАДАНИЯ 1-2: ХЕШ-ТАБЛИЦЫ")
+    print("=" * 60)
     
-    print("1. Хеш-таблица с методом цепочек:")
+    print("\n1. Хеш-таблица с методом цепочек:")
+    print("-" * 40)
     ht_chain = HashTableChaining()
-    ht_chain.put("apple", 1)
-    ht_chain.put("banana", 2)
-    ht_chain.put("cherry", 3)
-    ht_chain.put("apple", 10)  # Обновление значения
-    print(ht_chain)
-    print(f"Получение 'banana': {ht_chain.get('banana')}")
-    print(f"Содержит 'grape': {ht_chain.contains('grape')}")
-    print()
     
-    print("2. Хеш-таблица с открытой адресацией:")
+    # Добавляем элементы
+    ht_chain.put("apple", 10)
+    ht_chain.put("banana", 20)
+    ht_chain.put("orange", 30)
+    ht_chain.put("grape", 40)
+    ht_chain.put("apple", 15)  # Обновляем значение
+    
+    print("Содержимое таблицы:")
+    print(ht_chain)
+    
+    print(f"\nПолучение значений:")
+    print(f"apple -> {ht_chain.get('apple')}")
+    print(f"banana -> {ht_chain.get('banana')}")
+    
+    print(f"\nПроверка наличия ключей:")
+    print(f"Содержит 'orange': {ht_chain.contains('orange')}")
+    print(f"Содержит 'melon': {ht_chain.contains('melon')}")
+    
+    print(f"\nУдаление 'banana':")
+    ht_chain.remove('banana')
+    print(f"После удаления:")
+    print(ht_chain)
+    
+    print("\n2. Хеш-таблица с открытой адресацией:")
+    print("-" * 40)
     ht_open = HashTableOpenAddressing()
+    
     ht_open.put("one", 1)
     ht_open.put("two", 2)
     ht_open.put("three", 3)
-    print(ht_open)
-    print(f"Получение 'two': {ht_open.get('two')}")
-    ht_open.remove("two")
-    print("После удаления 'two':")
-    print(ht_open)
-    print()
-
-def demonstrate_blockchain():
-    print("=== ДЕМОНСТРАЦИЯ БЛОКЧЕЙНА ===\n")
+    ht_open.put("four", 4)
+    ht_open.put("one", 10)  # Обновление
     
+    print("Содержимое таблицы:")
+    print(ht_open)
+    
+    print(f"\nПолучение 'three': {ht_open.get('three')}")
+    print(f"Удаление 'two': {ht_open.remove('two')}")
+    print(f"После удаления:")
+    print(ht_open)
+
+
+def demonstrate_task_3():
+    """Демонстрация блокчейна"""
+    print("\n" + "=" * 60)
+    print("ЗАДАНИЕ 3: БЛОКЧЕЙН")
+    print("=" * 60)
+    
+    # Создаем блокчейн
     blockchain = Blockchain()
-    blockchain.add_block("Transaction 1: Alice -> Bob 10 BTC")
-    blockchain.add_block("Transaction 2: Bob -> Charlie 5 BTC")
-    blockchain.add_block("Transaction 3: Charlie -> Dave 3 BTC")
     
+    # Добавляем блоки с транзакциями
+    blockchain.add_block("Транзакция 1: Алиса -> Боб 10 BTC")
+    blockchain.add_block("Транзакция 2: Боб -> Чарли 5 BTC")
+    blockchain.add_block("Транзакция 3: Чарли -> Дэвид 3 BTC")
+    
+    print("Структура блокчейна:")
     print(blockchain)
-    print(f"Блокчейн валиден: {blockchain.is_valid()}")
-    print()
+    
+    print(f"Проверка целостности: {blockchain.is_valid()}")
+    
+    # Попробуем изменить данные в блоке (симуляция атаки)
+    print("\nСимуляция попытки изменения данных...")
+    blockchain.chain[1].data = "Транзакция 1: Алиса -> Злоумышленник 100 BTC"
+    print(f"Проверка целостности после изменения: {blockchain.is_valid()}")
 
-ᅠOdywanchick, [10.11.2025 8:58]
-def demonstrate_tasks():
-    print("=== РЕШЕНИЕ ЗАДАЧ 4-7 ===\n")
+
+def demonstrate_tasks_4_7():
+    """Демонстрация задач 4-7"""
+    print("\n" + "=" * 60)
+    print("ЗАДАНИЯ 4-7: РЕШЕНИЕ ЗАДАЧ")
+    print("=" * 60)
     
     # Задача 4: Пересечение массивов
+    print("\nЗадача 4: Проверка пересечения двух массивов")
+    print("-" * 40)
     arr1 = [1, 2, 3, 4, 5]
     arr2 = [6, 7, 8, 9, 10]
     arr3 = [5, 6, 7, 8, 9]
-    print(f"Задача 4 - Пересечение массивов:")
-    print(f"arr1 {arr1} и arr2 {arr2}: {array_intersection(arr1, arr2)}")
-    print(f"arr1 {arr1} и arr3 {arr3}: {array_intersection(arr1, arr3)}")
-    print()
+    
+    print(f"Массив 1: {arr1}")
+    print(f"Массив 2: {arr2}")
+    print(f"Есть пересечение? {array_intersection(arr1, arr2)}")
+    
+    print(f"\nМассив 1: {arr1}")
+    print(f"Массив 3: {arr3}")
+    print(f"Есть пересечение? {array_intersection(arr1, arr3)}")
     
     # Задача 5: Уникальность элементов
+    print("\nЗадача 5: Проверка уникальности элементов в массиве")
+    print("-" * 40)
     unique_arr = [1, 2, 3, 4, 5]
     duplicate_arr = [1, 2, 3, 2, 4]
-    print(f"Задача 5 - Уникальность элементов:")
-    print(f"Массив {unique_arr}: {all_unique_elements(unique_arr)}")
-    print(f"Массив {duplicate_arr}: {all_unique_elements(duplicate_arr)}")
-    print()
+    
+    print(f"Массив {unique_arr}: все элементы уникальны? {all_unique_elements(unique_arr)}")
+    print(f"Массив {duplicate_arr}: все элементы уникальны? {all_unique_elements(duplicate_arr)}")
     
     # Задача 6: Пары с заданной суммой
-    numbers = [2, 7, 11, 15, 3, 6, 8]
+    print("\nЗадача 6: Нахождение пар с заданной суммой")
+    print("-" * 40)
+    numbers = [2, 7, 11, 15, 3, 6, 8, 1]
     target = 9
-    print(f"Задача 6 - Пары с суммой {target}:")
-    print(f"Массив: {numbers}")
-    print(f"Пары: {find_pairs_with_sum(numbers, target)}")
-    print()
     
-    # Задача 7: Анаграммы
-    str1 = "listen"
-    str2 = "silent"
-    str3 = "hello"
-    str4 = "world"
-    print(f"Задача 7 - Анаграммы:")
-    print(f"'{str1}' и '{str2}': {are_anagrams(str1, str2)}")
-    print(f"'{str3}' и '{str4}': {are_anagrams(str3, str4)}")
+    print(f"Массив: {numbers}")
+    print(f"Целевая сумма: {target}")
+    pairs = find_pairs_with_sum(numbers, target)
+    print(f"Найденные пары: {pairs}")
+    
+    if pairs:
+        print("Проверка:")
+        for a, b in pairs:
+            print(f"  {a} + {b} = {a + b}")
+    
+    # Задача 7: Проверка анаграмм
+    print("\nЗадача 7: Проверка анаграмм")
+    print("-" * 40)
+    test_cases = [
+        ("listen", "silent"),
+        ("hello", "world"),
+        ("анаграмма", "маграана"),
+        ("python", "typhon")
+    ]
+    
+    for str1, str2 in test_cases:
+        result = are_anagrams(str1, str2)
+        print(f"'{str1}' и '{str2}': {'Анаграммы' if result else 'Не анаграммы'}")
 
-if name == "main":
-    demonstrate_hash_tables()
-    demonstrate_blockchain()
-    demonstrate_tasks()
+
+def main():
+    """Основная функция для демонстрации всех заданий"""
+    print("=" * 70)
+    print("ЛАБОРАТОРНАЯ РАБОТА: ХЕШ-ТАБЛИЦЫ И АЛГОРИТМЫ")
+    print("=" * 70)
+    
+    # Демонстрируем все задания
+    demonstrate_task_1_2()
+    demonstrate_task_3()
+    demonstrate_tasks_4_7()
+    
+    print("\n" + "=" * 70)
+    print("ВСЕ ЗАДАНИЯ ВЫПОЛНЕНЫ!")
+    print("=" * 70)
+
+
+# ============================================================================
+# ТЕСТИРОВАНИЕ
+# ============================================================================
+
+def run_tests():
+    """Запуск тестов для проверки корректности"""
+    print("Запуск тестов...")
+    
+    # Тест для задачи 4
+    assert array_intersection([1, 2, 3], [4, 5, 6]) == False
+    assert array_intersection([1, 2, 3], [3, 4, 5]) == True
+    assert array_intersection([], [1, 2, 3]) == False
+    
+    # Тест для задачи 5
+    assert all_unique_elements([1, 2, 3, 4]) == True
+    assert all_unique_elements([1, 2, 3, 1]) == False
+    assert all_unique_elements([]) == True
+    
+    # Тест для задачи 6
+    pairs = find_pairs_with_sum([1, 2, 3, 4, 5], 6)
+    assert (1, 5) in pairs and (2, 4) in pairs
+    assert len(pairs) == 2
+    
+    # Тест для задачи 7
+    assert are_anagrams("listen", "silent") == True
+    assert are_anagrams("hello", "world") == False
+    assert are_anagrams("", "") == True
+    
+    print("✓ Все тесты пройдены успешно!")
+    return True
+
+
+if __name__ == "__main__":
+    # Запускаем тесты
+    if run_tests():
+        print("\n" + "=" * 70)
+        print("ТЕСТЫ УСПЕШНО ПРОЙДЕНЫ. ЗАПУСК ДЕМОНСТРАЦИИ...")
+        print("=" * 70)
+        
+        # Запускаем демонстрацию
+        main()
+    else:
+        print("Тесты не пройдены. Проверьте код.")
+```
