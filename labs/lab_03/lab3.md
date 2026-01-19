@@ -19,7 +19,12 @@ class Node:
         self.data = data
         self.next = None
 
-# Версия 1: Базовая реализация
+
+# ============================================
+# 1. 6 ВЕРСИЙ ЛИНЕЙНОГО ОДНОСВЯЗНОГО СПИСКА
+# ============================================
+
+# Версия 1: Базовая реализация (без заголовка)
 class LinkedListV1:
     def __init__(self):
         self.head = None
@@ -41,38 +46,62 @@ class LinkedListV1:
             elements.append(current.data)
             current = current.next
         return elements
+    
+    def __str__(self):
+        return "->".join(map(str, self.display())) if self.display() else "Empty"
 
-# Версия 2: С двусвязными узлами
-class DoubleNode:
-    def __init__(self, data):
-        self.data = data
-        self.next = None
-        self.prev = None
 
+# Версия 2: С фиктивным узлом (dummy head)
 class LinkedListV2:
     def __init__(self):
-        self.head = None
-        self.tail = None
+        self.dummy = Node(None)  # фиктивный узел
     
     def append(self, data):
-        new_node = DoubleNode(data)
-        if not self.head:
-            self.head = self.tail = new_node
-        else:
-            self.tail.next = new_node
-            new_node.prev = self.tail
-            self.tail = new_node
+        new_node = Node(data)
+        current = self.dummy
+        while current.next:
+            current = current.next
+        current.next = new_node
     
     def display(self):
         elements = []
-        current = self.head
+        current = self.dummy.next
         while current:
             elements.append(current.data)
             current = current.next
         return elements
+    
+    def __str__(self):
+        return "->".join(map(str, self.display())) if self.display() else "Empty"
 
-# Версия 3: Циклический список
+
+# Версия 3: С заголовочным узлом (header node с данными)
 class LinkedListV3:
+    def __init__(self):
+        self.header = Node(0)  # заголовочный узел может хранить размер
+    
+    def append(self, data):
+        new_node = Node(data)
+        current = self.header
+        while current.next:
+            current = current.next
+        current.next = new_node
+        self.header.data += 1  # увеличиваем размер в заголовке
+    
+    def display(self):
+        elements = []
+        current = self.header.next
+        while current:
+            elements.append(current.data)
+            current = current.next
+        return elements
+    
+    def __str__(self):
+        return "->".join(map(str, self.display())) if self.display() else "Empty"
+
+
+# Версия 4: Циклический односвязный список
+class LinkedListV4:
     def __init__(self):
         self.head = None
     
@@ -97,26 +126,12 @@ class LinkedListV3:
             elements.append(current.data)
             current = current.next
         return elements
+    
+    def __str__(self):
+        if not self.head:
+            return "Empty"
+        return "->".join(map(str, self.display())) + "->(head)"
 
-# Версия 4: С заголовочным узлом
-class LinkedListV4:
-    def __init__(self):
-        self.header = Node(None)  # Заголовочный узел
-    
-    def append(self, data):
-        new_node = Node(data)
-        current = self.header
-        while current.next:
-            current = current.next
-        current.next = new_node
-    
-    def display(self):
-        elements = []
-        current = self.header.next
-        while current:
-            elements.append(current.data)
-            current = current.next
-        return elements
 
 # Версия 5: С хвостовым указателем
 class LinkedListV5:
@@ -139,8 +154,12 @@ class LinkedListV5:
             elements.append(current.data)
             current = current.next
         return elements
+    
+    def __str__(self):
+        return "->".join(map(str, self.display())) if self.display() else "Empty"
 
-# Версия 6: Итеративная версия с дополнительными методами
+
+# Версия 6: Итеративная версия с поддержкой len()
 class LinkedListV6:
     def __init__(self):
         self.head = None
@@ -168,12 +187,18 @@ class LinkedListV6:
     
     def display(self):
         return list(self)
-```
+    
+    def __str__(self):
+        return "->".join(map(str, self.display())) if self._size > 0 else "Empty"
 
-```python
+
+# ============================================
+# 2. МЕТОД REVERSE (добавляем в одну из версий)
+# ============================================
+
 class LinkedListWithReverse(LinkedListV1):
     def reverse(self):
-        """Переворот списка (итеративный метод)"""
+        """Переворот списка - ПУНКТ 2"""
         prev = None
         current = self.head
         
@@ -184,23 +209,15 @@ class LinkedListWithReverse(LinkedListV1):
             current = next_node
         
         self.head = prev
-    
-    def reverse_recursive(self):
-        """Переворот списка (рекурсивный метод)"""
-        def _reverse(current, prev):
-            if not current:
-                return prev
-            next_node = current.next
-            current.next = prev
-            return _reverse(next_node, current)
-        
-        self.head = _reverse(self.head, None)
-```
 
-```python
+
+# ============================================
+# 3. МЕТОД SORT (добавляем в одну из версий)
+# ============================================
+
 class LinkedListWithSort(LinkedListV1):
     def sort(self):
-        """Сортировка списка пузырьковым методом"""
+        """Сортировка пузырьком - ПУНКТ 3"""
         if not self.head or not self.head.next:
             return
         
@@ -211,167 +228,132 @@ class LinkedListWithSort(LinkedListV1):
             
             while current and current.next:
                 if current.data > current.next.data:
+                    # Меняем данные, не узлы
                     current.data, current.next.data = current.next.data, current.data
                     swapped = True
                 current = current.next
-    
-    def sort_merge(self):
-        """Сортировка слиянием"""
-        def merge_sort(head):
-            if not head or not head.next:
-                return head
-            
-            # Разделение списка
-            middle = get_middle(head)
-            next_to_middle = middle.next
-            middle.next = None
-            
-            # Рекурсивная сортировка
-            left = merge_sort(head)
-            right = merge_sort(next_to_middle)
-            
-            # Слияние
-            return merge(left, right)
-        
-        def get_middle(head):
-            if not head:
-                return head
-            
-            slow = head
-            fast = head
-            
-            while fast.next and fast.next.next:
-                slow = slow.next
-                fast = fast.next.next
-            
-            return slow
-        
-        def merge(left, right):
-            if not left:
-                return right
-            if not right:
-                return left
-            
-            if left.data <= right.data:
-                result = left
-                result.next = merge(left.next, right)
-            else:
-                result = right
-                result.next = merge(left, right.next)
-            
-            return result
-        
-        self.head = merge_sort(self.head)
-```
 
-```python
+
+# ============================================
+# 4. ИНДИВИДУАЛЬНОЕ ЗАДАНИЕ (дублирование четных)
+# ============================================
+
 class LinkedListWithDuplicateEven(LinkedListV1):
-    def duplicate_even_numbers(self):
-        """Продублировать все четные числа в списке"""
+    def duplicate_even(self):
+        """Дублировать все четные числа - ПУНКТ 4"""
         current = self.head
         
         while current:
-            if current.data % 2 == 0:
-                new_node = Node(current.data)
-                new_node.next = current.next
+            if current.data % 2 == 0:  # если число четное
+                new_node = Node(current.data)  # создаем копию
+                new_node.next = current.next    # вставляем после текущего
                 current.next = new_node
-                current = new_node.next
+                current = new_node.next         # перескакиваем через добавленный
             else:
-                current = current.next
-```
+                current = current.next          # идем дальше
 
-```python
-class CircularLinkedList:
-    def __init__(self):
-        self.head = None
-    
-    def append(self, data):
-        new_node = Node(data)
+
+# ============================================
+# 5. ОПЦИОНАЛЬНО: РЕАЛИЗАЦИЯ ЦИКЛА
+# ============================================
+
+class CircularLinkedListWithLoop(LinkedListV4):
+    def do_while_traversal(self):
+        """Цикл с постусловием (do-while) - ПУНКТ 5"""
         if not self.head:
-            self.head = new_node
-            new_node.next = self.head
-        else:
-            current = self.head
-            while current.next != self.head:
-                current = current.next
-            current.next = new_node
-            new_node.next = self.head
-    
-    def display(self):
-        if not self.head:
-            return []
-        elements = [self.head.data]
-        current = self.head.next
-        while current != self.head:
-            elements.append(current.data)
+            print("Список пуст")
+            return
+        
+        current = self.head
+        while True:
+            print(f"{current.data}", end=" -> " if current.next != self.head else "")
             current = current.next
-        return elements
-    
-    def has_cycle(self):
-        """Проверка наличия цикла (алгоритм Флойда)"""
-        if not self.head:
-            return False
-        
-        slow = self.head
-        fast = self.head
-        
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow == fast:
-                return True
-        
-        return False
-```
+            if current == self.head:  # условие выхода
+                break
+        print("(head)" if self.head else "")
 
-```python
+
+# ============================================
+# ТЕСТИРОВАНИЕ ВСЕХ ФУНКЦИЙ
+# ============================================
+
 def main():
-    print("=== ТЕСТИРОВАНИЕ ВСЕХ ФУНКЦИЙ ===\n")
+    print("=" * 60)
+    print("ЛАБОРАТОРНАЯ РАБОТА: ЛИНЕЙНЫЕ ОДНОСВЯЗНЫЕ СПИСКИ")
+    print("=" * 60)
     
     # 1. Тестирование 6 версий списка
-    print("1. Тестирование 6 версий списка:")
-    versions = [LinkedListV1(), LinkedListV2(), LinkedListV3(), 
-                LinkedListV4(), LinkedListV5(), LinkedListV6()]
+    print("\n1. ТЕСТИРОВАНИЕ 6 ВЕРСИЙ СПИСКА:")
+    print("-" * 40)
     
-    for i, lst in enumerate(versions, 1):
-        for num in [3, 1, 4]:
-            lst.append(num)
-        print(f"Версия {i}: {lst.display()}")
+    # Создаем все версии
+    lists = [
+        ("V1: Базовая", LinkedListV1()),
+        ("V2: С фиктивным узлом", LinkedListV2()),
+        ("V3: С заголовком", LinkedListV3()),
+        ("V4: Циклический", LinkedListV4()),
+        ("V5: С хвостом", LinkedListV5()),
+        ("V6: Итеративная", LinkedListV6())
+    ]
+    
+    # Добавляем одинаковые данные во все списки
+    test_data = [3, 1, 4, 2]
+    for name, lst in lists:
+        for data in test_data:
+            lst.append(data)
+        print(f"{name}: {lst}")
     
     # 2. Тестирование reverse
-    print("\n2. Тестирование reverse:")
+    print("\n\n2. ТЕСТИРОВАНИЕ МЕТОДА REVERSE:")
+    print("-" * 40)
+    
     lst_rev = LinkedListWithReverse()
     for num in [1, 2, 3, 4, 5]:
         lst_rev.append(num)
-    print(f"До reverse: {lst_rev.display()}")
+    
+    print(f"До reverse:    {lst_rev}")
     lst_rev.reverse()
-    print(f"После reverse: {lst_rev.display()}")
+    print(f"После reverse: {lst_rev}")
     
     # 3. Тестирование sort
-    print("\n3. Тестирование sort:")
+    print("\n\n3. ТЕСТИРОВАНИЕ МЕТОДА SORT:")
+    print("-" * 40)
+    
     lst_sort = LinkedListWithSort()
-    for num in [5, 2, 8, 1, 9]:
+    for num in [5, 2, 8, 1, 9, 3]:
         lst_sort.append(num)
-    print(f"До sort: {lst_sort.display()}")
+    
+    print(f"До sort:    {lst_sort}")
     lst_sort.sort()
-    print(f"После sort: {lst_sort.display()}")
+    print(f"После sort: {lst_sort}")
     
     # 4. Тестирование дублирования четных чисел
-    print("\n4. Тестирование дублирования четных чисел:")
+    print("\n\n4. ТЕСТИРОВАНИЕ ДУБЛИРОВАНИЯ ЧЕТНЫХ ЧИСЕЛ:")
+    print("-" * 40)
+    
     lst_dup = LinkedListWithDuplicateEven()
     for num in [1, 2, 3, 4, 5, 6]:
         lst_dup.append(num)
-    print(f"До дублирования: {lst_dup.display()}")
-    lst_dup.duplicate_even_numbers()
-    print(f"После дублирования: {lst_dup.display()}")
     
-    # 5. Тестирование циклического списка
-    print("\n5. Тестирование циклического списка:")
-    circular = CircularLinkedList()
-    for num in [1, 2, 3]:
+    print(f"До дублирования:    {lst_dup}")
+    lst_dup.duplicate_even()
+    print(f"После дублирования: {lst_dup}")
+    
+    # 5. Тестирование цикла do-while
+    print("\n\n5. ТЕСТИРОВАНИЕ ЦИКЛА DO-WHILE:")
+    print("-" * 40)
+    
+    circular = CircularLinkedListWithLoop()
+    for num in [10, 20, 30, 40]:
         circular.append(num)
-    print(f"Циклический список: {circular.display()}")
-    print(f"Есть цикл: {circular.has_cycle()}")
+    
+    print("Циклический список: ", end="")
+    circular.do_while_traversal()
+    
+    print("\n" + "=" * 60)
+    print("ВСЕ ЗАДАНИЯ ВЫПОЛНЕНЫ!")
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()
